@@ -1,7 +1,7 @@
 --[[--
 HTTP client for the NewTwos public API.
 
-Base URL: https://writethingsdown.com/api/v1
+Base URL: https://www.twosapp.com/api/v1
 Auth: Bearer token (API key created in NewTwos Settings -> API Keys).
 @module koplugin.twos.twosapi
 --]]--
@@ -15,7 +15,7 @@ local socketutil  = require("socketutil")
 local _           = require("gettext")
 
 local TwosAPI = {}
-TwosAPI.base_url = "https://writethingsdown.com/api/v1"
+TwosAPI.base_url = "https://www.twosapp.com/api/v1"
 
 function TwosAPI:new(o)
     o = o or {}

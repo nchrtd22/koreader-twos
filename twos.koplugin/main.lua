@@ -5,7 +5,7 @@ Each book becomes a NewTwos list (named after the book title); each
 highlight becomes a "thing" of type note, styled as a blockquote, uploaded
 in bulk with skip_duplicates so re-runs are safe.
 
-API docs: https://writethingsdown.com/api/v1/openapi.json
+API docs: https://www.twosapp.com/api/v1/openapi.json
 @module koplugin.twos
 --]]--
 
