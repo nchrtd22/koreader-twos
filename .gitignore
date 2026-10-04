@@ -1,0 +1,5 @@
+# Local AI session transcripts, not part of the plugin
+session-*.md
+
+# KOReader sidecar files
+*.sdr/
