@@ -278,7 +278,6 @@ function Twos:exportCurrentBook(interactive)
         end
         return
     end
-    self.ui.annotation:updatePageNumbers(true)
     if NetworkMgr:willRerunWhenOnline(function() self:exportCurrentBook(interactive) end) then return end
     local book = self.collector:fromCurrentDoc()
     if not book or #book.entries == 0 then
@@ -301,36 +300,38 @@ function Twos:exportAllBooks(interactive)
         return
     end
     if NetworkMgr:willRerunWhenOnline(function() self:exportAllBooks(interactive) end) then return end
-    local books = self.collector:fromHistory()
-
-    -- Merge in the currently open document's live annotations, which may
-    -- not have been flushed to the sidecar file on disk yet.
-    if self.ui and self.ui.document and self.ui.annotation then
-        local current_file = self.ui.document.file
-        local live_book = self.collector:fromCurrentDoc()
-        if live_book and #live_book.entries > 0 then
-            local found = false
-            for __, book in ipairs(books) do
-                if book.file == current_file then
-                    book.entries = live_book.entries
-                    found = true
-                    break
-                end
-            end
-            if not found then
-                table.insert(books, 1, live_book)
-            end
-        end
-    end
-
-    if #books == 0 then
-        if interactive then
-            UIManager:show(InfoMessage:new{ text = _("No books with highlights found in history."), timeout = 3 })
-        end
-        return
-    end
     UIManager:show(InfoMessage:new{ text = _("Sending highlights to NewTwos…"), timeout = 1 })
     UIManager:nextTick(function()
+        -- Collect inside the tick so the message is on screen while
+        -- sidecar files are parsed (slow on large libraries).
+        local books = self.collector:fromHistory()
+
+        -- Merge in the currently open document's live annotations, which may
+        -- not have been flushed to the sidecar file on disk yet.
+        if self.ui and self.ui.document and self.ui.annotation then
+            local current_file = self.ui.document.file
+            local live_book = self.collector:fromCurrentDoc()
+            if live_book and #live_book.entries > 0 then
+                local found = false
+                for __, book in ipairs(books) do
+                    if book.file == current_file then
+                        book.entries = live_book.entries
+                        found = true
+                        break
+                    end
+                end
+                if not found then
+                    table.insert(books, 1, live_book)
+                end
+            end
+        end
+
+        if #books == 0 then
+            if interactive then
+                UIManager:show(InfoMessage:new{ text = _("No books with highlights found in history."), timeout = 3 })
+            end
+            return
+        end
         self:sendBooks(books, interactive)
     end)
 end
