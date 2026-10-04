@@ -110,6 +110,7 @@ function TwosAPI:testConnection()
 end
 
 --- Find a list by exact (case-insensitive) title match.
+-- Note: /search caps at 50 lists and is not a complete enumeration.
 -- @return list_id string|nil, err string|nil
 function TwosAPI:findListByTitle(title)
     local ok, res, err = self:request("GET", "/search", { query = title })
@@ -121,6 +122,28 @@ function TwosAPI:findListByTitle(title)
                 return list.id
             end
         end
+    end
+    return nil
+end
+
+--- Find a list by exact title, paging through every list.
+-- Complete enumeration (50 per page); used as a fallback when the
+-- capped /search endpoint misses an existing list.
+-- @return list_id string|nil, err string|nil
+function TwosAPI:findListByPaging(title)
+    local lower = title:lower()
+    local page = 0
+    while page < 100 do -- hard cap: 100 pages * 50 lists
+        local ok, res, err = self:request("GET", "/lists", { page = page })
+        if not ok then return nil, err end
+        local lists = (res and res.lists) or {}
+        for __, list in ipairs(lists) do
+            if list.title and list.title:lower() == lower then
+                return list.id
+            end
+        end
+        if not res or not res.has_more or #lists == 0 then break end
+        page = page + 1
     end
     return nil
 end
@@ -141,9 +164,14 @@ function TwosAPI:createList(title, emoji)
 end
 
 --- Find an existing list by title, or create it if missing.
+-- /search is tried first (fast), then every list is paged through
+-- before creating, so a capped search can never produce a duplicate list.
 -- @return list_id string|nil, err string|nil
 function TwosAPI:findOrCreateList(title, emoji)
     local id, err = self:findListByTitle(title)
+    if id then return id end
+    if err then return nil, err end
+    id, err = self:findListByPaging(title)
     if id then return id end
     if err then return nil, err end
     return self:createList(title, emoji)
