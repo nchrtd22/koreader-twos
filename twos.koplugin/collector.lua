@@ -8,7 +8,6 @@ Mirrors the data extraction patterns of plugins/exporter.koplugin/clip.lua.
 
 local BookList = require("ui/widget/booklist")
 local ReadHistory = require("readhistory")
-local _ = require("gettext")
 
 local Collector = {}
 
@@ -41,13 +40,16 @@ function Collector:getTitleAuthor(filepath, props)
 end
 
 --- Best-effort parse of "Title (Author)" / "Title - Author" / bare filename.
+-- The dash form requires spaces around the dash, so hyphenated titles
+-- ("Twenty-Thousand Leagues") are not split into a bogus author.
+-- @return title string, author string|nil
 function Collector:parseTitleFromPath(name)
     name = name:gsub("%.[^.]+$", "")
     local title, author = name:match("^(.-)%s*%(([^)]+)%)$")
     if title then return title, author end
-    title, author = name:match("^(.-)%s*-%s*(.+)$")
+    title, author = name:match("^(.-)%s+%-%s+(.+)$")
     if title then return title, author end
-    return name, _("Unknown Author")
+    return name, nil
 end
 
 --- Read modern unified annotations into the entries list.

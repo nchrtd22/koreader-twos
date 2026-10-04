@@ -344,7 +344,7 @@ function Twos:sendBooks(books, interactive)
         for __, book in ipairs(books) do
             if api.rate_limited then break end
             local list_title = book.title
-            if book.author and book.author ~= "" and book.author ~= _("Unknown Author") then
+            if book.author and book.author ~= "" then
                 list_title = book.title .. " - " .. book.author
             end
             local list_id, err = api:findOrCreateList(list_title, self.settings.emoji or "")
